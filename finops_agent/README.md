@@ -4,13 +4,13 @@ Autonomous agent for Databricks cost analysis, anomaly detection, and optimizati
 
 ## Capabilities
 
-- 📊 **Cost Analysis** — DBU, compute, storage by user/team/project
-- 🚨 **Anomaly Detection** — Spike detection, runaway clusters, idle resources
-- 💡 **Optimization** — Right-sizing, autoscale, Photon, serverless recommendations
-- 🔮 **Forecasting** — Month-end projections, budget burn-rate alerts
-- 💰 **Chargeback** — Tag-based cost allocation, untagged resource detection
-- 🛡️ **Policy Enforcement** — Tag compliance, expensive node-type flagging
-- 📄 **Reporting** — LLM-generated executive summaries, dashboards, Genie space
+- **Cost Analysis** — DBU, compute, storage by user/team/project
+- **Anomaly Detection** — Spike detection, runaway clusters, idle resources
+- **Optimization** — Right-sizing, autoscale, Photon, serverless recommendations
+- **Forecasting** — Month-end projections, budget burn-rate alerts
+- **Chargeback** — Tag-based cost allocation, untagged resource detection
+- **Policy Enforcement** — Tag compliance, expensive node-type flagging
+- **Reporting** — LLM-generated executive summaries, dashboards, Genie space
 
 ## Architecture
 
