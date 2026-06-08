@@ -14,10 +14,10 @@ Autonomous agent for Databricks cost analysis, anomaly detection, and optimizati
 
 ## Architecture
 
-- **Bronze** → Raw billing/usage data from `system.billing.usage` + Azure Cost API
-- **Silver** → Cleaned, joined, enriched cost data
-- **Gold** → Aggregated metrics for dashboards
-- **Agent** → State, audit logs, recommendations, run history
+- **Bronze** = Raw billing/usage data from `system.billing.usage` + Azure Cost API
+- **Silver** = Cleaned, joined, enriched cost data
+- **Gold** = Aggregated metrics for dashboards
+- **Agent** = State, audit logs, recommendations, run history
 
 ## Tech Stack
 
@@ -79,6 +79,4 @@ black src/ tests/
 ruff check src/ tests/
 ```
 
-## License
-
-Internal POC — not for distribution.
+Internal POC
