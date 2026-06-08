@@ -1,0 +1,146 @@
+# ============================================================
+# FinOps Agent — Job Definitions (SERVERLESS)
+# ============================================================
+# All 4 jobs converted to serverless compute.
+# Removed: job_clusters, new_cluster, spark_version, node_type, num_workers
+# Preserved: schedules, parameters, dependencies, notifications, var refs
+# ============================================================
+
+resources:
+  jobs:
+
+    # --------------------------------------------------------
+    # JOB 1: One-time setup
+    # Creates finops.agent.* tables. Run ONCE after first deploy.
+    # --------------------------------------------------------
+    finops_setup:
+      name: "[${bundle.target}] FinOps — Setup (one-time)"
+      max_concurrent_runs: 1
+      timeout_seconds: 1800
+
+      tasks:
+        - task_key: setup_tables
+          notebook_task:
+            notebook_path: ../notebooks/00_setup.py
+            base_parameters:
+              catalog: ${var.catalog}
+          # 🔑 No job_cluster_key → serverless
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+    # --------------------------------------------------------
+    # JOB 2: Ingest cost data (daily)
+    # Pulls from system.billing.usage + Azure Cost Mgmt API
+    # --------------------------------------------------------
+    finops_ingest:
+      name: "[${bundle.target}] FinOps — Ingest Costs (daily)"
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?"   # 05:00 UTC
+        timezone_id: "UTC"
+        pause_status: PAUSED                     # unpause after manual test
+
+      tasks:
+        - task_key: ingest
+          notebook_task:
+            notebook_path: ../notebooks/01_ingest_costs.py
+            base_parameters:
+              catalog: ${var.catalog}
+              azure_subscription_id: ${var.azure_subscription_id}
+              lookback_days: "7"
+          # 🔑 serverless
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+
+    # --------------------------------------------------------
+    # JOB 3: Daily agent run
+    # Cost analysis, anomaly detection, recommendations
+    # --------------------------------------------------------
+    finops_agent_daily:
+      name: "[${bundle.target}] FinOps — Daily Agent Run"
+      max_concurrent_runs: 1
+      timeout_seconds: 3600
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: lookback_days
+          default: "7"
+        - name: dry_run
+          default: "false"
+
+      schedule:
+        quartz_cron_expression: "0 0 7 * * ?"   # 07:00 UTC (after ingest)
+        timezone_id: "UTC"
+        pause_status: PAUSED
+
+      tasks:
+        - task_key: run_agent
+          notebook_task:
+            notebook_path: ../notebooks/03_run_agent.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              lookback_days: "{{job.parameters.lookback_days}}"
+              dry_run: "{{job.parameters.dry_run}}"
+              llm_endpoint: ${var.llm_endpoint}
+              budget_monthly_usd: ${var.budget_monthly_usd}
+              cost_spike_pct_threshold: ${var.cost_spike_pct_threshold}
+          # 🔑 serverless
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+        on_success:
+          - ${var.notification_email}
+
+    # --------------------------------------------------------
+    # JOB 4: Weekly batch analysis
+    # Deep analysis + forecasting + dashboard refresh
+    # --------------------------------------------------------
+    finops_agent_weekly:
+      name: "[${bundle.target}] FinOps — Weekly Deep Analysis"
+      max_concurrent_runs: 1
+      timeout_seconds: 7200
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: lookback_days
+          default: "30"
+
+      schedule:
+        quartz_cron_expression: "0 0 8 ? * MON"  # Mondays 08:00 UTC
+        timezone_id: "UTC"
+        pause_status: PAUSED
+
+      tasks:
+        - task_key: weekly_analysis
+          notebook_task:
+            notebook_path: ../notebooks/04_batch_analysis.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+              lookback_days: "{{job.parameters.lookback_days}}"
+              llm_endpoint: ${var.llm_endpoint}
+              budget_monthly_usd: ${var.budget_monthly_usd}
+          # 🔑 serverless
+
+        - task_key: refresh_dashboard_data
+          depends_on:
+            - task_key: weekly_analysis
+          notebook_task:
+            notebook_path: ../notebooks/05_dashboard_data.py
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+          # 🔑 serverless
+
+      email_notifications:
+        on_failure:
+          - ${var.notification_email}
+        on_success:
+          - ${var.notification_email}

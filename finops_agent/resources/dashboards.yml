@@ -1,0 +1,8 @@
+# ============================================================
+# FinOps Agent — Dashboard Resources
+# ============================================================
+# We'll register the Lakeview dashboard JSON in Part 7.
+# For now, this is a placeholder so the bundle validates.
+# ============================================================
+resources:
+  dashboards: {}

@@ -1,0 +1,83 @@
+# ============================================================
+# FinOps Agent — Databricks Asset Bundle (SERVERLESS)
+# ============================================================
+bundle:
+  name: finops_agent
+
+# ----------------------------------------------------------
+# Variables (overridable per target)
+# ----------------------------------------------------------
+variables:
+  catalog:
+    description: "Unity Catalog where finops data lives"
+    default: "finops"
+
+  notification_email:
+    description: "Email address for job failure notifications"
+    default: "shivaan.jaswal@gmail.com"  # CHANGE THIS
+
+  llm_endpoint:
+    description: "Foundation Model serving endpoint"
+    default: "databricks-meta-llama-3-3-70b-instruct"
+
+  # 🔴 REMOVED: node_type (serverless picks compute automatically)
+  # 🔴 REMOVED: spark_version (serverless manages runtime version)
+
+  azure_subscription_id:
+    description: "Azure subscription ID for Cost Management API"
+    default: ""  # Set via --var or environment variable
+
+  budget_monthly_usd:
+    description: "Monthly budget threshold (USD) — used for burn-rate alerts"
+    default: "1000"
+
+  cost_spike_pct_threshold:
+    description: "Percent above 7-day baseline that triggers an anomaly"
+    default: "30"
+
+# ----------------------------------------------------------
+# Include all resource definitions (jobs, dashboards, etc.)
+# ----------------------------------------------------------
+include:
+  - resources/*.yml
+
+# ----------------------------------------------------------
+# Sync everything to workspace (so notebooks can `import src.*`)
+# ----------------------------------------------------------
+sync:
+  include:
+    - "src/**"
+    - "notebooks/**"
+  exclude:
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+    - ".venv/**"
+    - ".pytest_cache/**"
+    - "tests/**"
+
+# ----------------------------------------------------------
+# Targets: dev (your laptop) and prod (scheduled)
+# ----------------------------------------------------------
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: "finops"
+      notification_email: "yshivaan.jaswal@gmail.com"  # CHANGE THIS
+    run_as:
+      user_name: ${workspace.current_user.userName}
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: "finops"
+    run_as:
+      user_name: ${workspace.current_user.userName}
+    permissions:
+      - level: CAN_VIEW
+        group_name: users
