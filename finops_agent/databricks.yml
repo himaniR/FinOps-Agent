@@ -14,14 +14,14 @@ variables:
 
   notification_email:
     description: "Email address for job failure notifications"
-    default: "shivaan.jaswal@gmail.com"  # CHANGE THIS
+    default: "xxx"  # CHANGE THIS
 
   llm_endpoint:
     description: "Foundation Model serving endpoint"
     default: "databricks-meta-llama-3-3-70b-instruct"
 
-  # 🔴 REMOVED: node_type (serverless picks compute automatically)
-  # 🔴 REMOVED: spark_version (serverless manages runtime version)
+  #  REMOVED: node_type (serverless picks compute automatically)
+  # REMOVED: spark_version (serverless manages runtime version)
 
   azure_subscription_id:
     description: "Azure subscription ID for Cost Management API"
@@ -66,7 +66,7 @@ targets:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
     variables:
       catalog: "finops"
-      notification_email: "yshivaan.jaswal@gmail.com"  # CHANGE THIS
+      notification_email: "ggg"  # CHANGE THIS
     run_as:
       user_name: ${workspace.current_user.userName}
 
